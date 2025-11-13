@@ -3,10 +3,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*************************************************************************
 *************************************************************************
-This plugin is free software: you can redistribute 
+This plugin is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License, or
-later version. 
+later version.
 
 This plugin is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -328,7 +328,7 @@ RemovePreviousMapsFromCycle()
 {
 	map_kv = CreateKeyValues("umc_rotation");
 	KvCopySubkeys(umc_mapcycle, map_kv);
-	FilterMapcycleFromArrays(map_kv, randnext_mem_arr, randnext_catmem_arr, GetConVarInt(cvar_randnext_catmem));
+	FilterMapcycleFromArrays(view_as<KeyValues>(map_kv), view_as<ArrayList>(randnext_mem_arr), view_as<ArrayList>(randnext_catmem_arr), GetConVarInt(cvar_randnext_catmem));
 }
 
 //************************************************************************************************//
@@ -368,7 +368,7 @@ public Action:Command_Random(client, args)
 //************************************************************************************************//
 
 //Sets a random next map. Returns true on success.
-DoRandomNextMap(bool:nativelyOnly = false) 
+DoRandomNextMap(bool:nativelyOnly = false)
 {
 	decl String:nextMap[MAP_LENGTH];
 

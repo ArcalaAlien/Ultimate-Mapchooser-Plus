@@ -4,7 +4,7 @@
  * NativeVotes
  * NativeVotes is a voting API plugin for L4D, L4D2, TF2, and CS:GO.
  * Based on the SourceMod voting API
- * 
+ *
  * NativeVotes (C) 2011-2015 Ross Bemrose (Powerlord). All rights reserved.
  * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
  * =============================================================================
@@ -12,7 +12,7 @@
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
  * Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
@@ -139,7 +139,7 @@ PrivateForward g_CallVotes[NativeVotesOverride_Count][CallVoteForwards];
 
 #include "nativevotes/game.sp"
 
-public Plugin myinfo = 
+public Plugin myinfo =
 {
 	name = "NativeVotes",
 	author = "Powerlord",
@@ -328,7 +328,7 @@ public void ProcessMapList()
 	{
 #if defined LOG
 		LogMessage("Overriding map list with %d maps", overrideList.Size);
-#endif 
+#endif
 
 		g_MapOverrides = overrideList;
 
@@ -487,7 +487,7 @@ public Action Command_CallVote(int client, const char[] command, int argc)
 			if (GetForwardFunctionCount(g_CallVotes[overrideType][CallVote_Forward]) == 0)
 			{
 
-				if (g_MapOverrides != null && 
+				if (g_MapOverrides != null &&
 					(overrideType == NativeVotesOverride_ChgLevel ||
 					overrideType == NativeVotesOverride_NextLevel))
 				{
@@ -851,7 +851,7 @@ void OnVoteResults(NativeVote vote, const int[][] votes, int num_votes, int item
 			winning_item = GetRandomInt(0, num_items - 1);
 			winning_item = votes[winning_item][VOTEINFO_ITEM_INDEX];
 		}
-		else 
+		else
 		{
 			/* No, take the first */
 			winning_item = votes[0][VOTEINFO_ITEM_INDEX];

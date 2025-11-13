@@ -3,10 +3,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*************************************************************************
 *************************************************************************
-This plugin is free software: you can redistribute 
+This plugin is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License, or
-later version. 
+later version.
 
 This plugin is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -391,7 +391,7 @@ SetupMinMaxPlayers(const String:map[], const String:group[])
 	KvRewind(umc_mapcycle); //rewind the mapcycle handle
 	new dmin, dmax; //variables to store default values for the category.
 
-	//Set appropriate min and max player variables if we can reach the current 
+	//Set appropriate min and max player variables if we can reach the current
 	// category in the mapcycle OR we can jump to the map somewhere in the mapcycle
 	if (!StrEqual(group, INVALID_GROUP) && KvJumpToKey(umc_mapcycle, group))
 	{
@@ -450,7 +450,7 @@ RemovePreviousMapsFromCycle()
 {
 	map_kv = CreateKeyValues("umc_rotation");
 	KvCopySubkeys(umc_mapcycle, map_kv);
-	FilterMapcycleFromArrays(map_kv, vote_mem_arr, vote_catmem_arr, GetConVarInt(cvar_catmem));
+	FilterMapcycleFromArrays(view_as<KeyValues>(map_kv), view_as<ArrayList>(vote_mem_arr), view_as<ArrayList>(vote_catmem_arr), GetConVarInt(cvar_catmem));
 }
 
 //************************************************************************************************//
@@ -518,7 +518,7 @@ public RunPlayerLimitCheck()
 	}
 }
 
-//Handles changing to a map in the event the number of players on the server is outside of the 
+//Handles changing to a map in the event the number of players on the server is outside of the
 //bounds defined by the map.
 //    cvar:    the cvar defining what action to take in this event.
 ChangeToValidMap(Handle:cvar)

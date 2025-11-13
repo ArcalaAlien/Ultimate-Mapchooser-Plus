@@ -3,10 +3,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*************************************************************************
 *************************************************************************
-This plugin is free software: you can redistribute 
+This plugin is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License, or
-later version. 
+later version.
 
 This plugin is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************
-*************************************************************************/ 
+*************************************************************************/
 #pragma semicolon 1
 
 //Dependencies
@@ -287,7 +287,7 @@ public OnPluginStart()
 	//Create the config if it doesn't exist, and then execute it.
 	AutoExecConfig(true, "ultimate-mapchooser");
 
-	// Admin commands 
+	// Admin commands
 	RegAdminCmd("sm_setnextmap", Command_SetNextmap, ADMFLAG_CHANGEMAP, "sm_setnextmap <map>");
 	RegAdminCmd("sm_umc_reload_mapcycles", Command_Reload, ADMFLAG_RCON, "Reloads the mapcycle file.");
 	RegAdminCmd("sm_umc_stopvote", Command_StopVote, ADMFLAG_CHANGEMAP, "Stops all UMC votes that are in progress.");
@@ -394,7 +394,7 @@ public OnConfigsExecuted()
 public Action:OnPlayerChat(client, const String:command[], argc)
 {
 	//Return immediately if nothing was typed.
-	if (argc == 0) 
+	if (argc == 0)
 	{
 		return Plugin_Continue;
 	}
@@ -825,7 +825,7 @@ Handle:CreateMapArray(Handle:kv, Handle:mapcycle, const String:group[], bool:isN
 		return INVALID_HANDLE;
 	}
 
-	new bool:oneSection = false; 
+	new bool:oneSection = false;
 	if (StrEqual(group, INVALID_GROUP))
 	{
 		if (!KvGotoFirstSubKey(kv))
@@ -1374,7 +1374,7 @@ public void Native_UMCGetMapGroup(Handle plugin, int numParams)
 			groupList.GetString(i, group, sizeof(group));
 			if (StrContains(group, "featured", false) != -1 || StrContains(group, "new", false) != -1)
 				continue;
-			
+
 			ArrayList mapList = view_as<ArrayList>(UMC_CreateValidMapArray(mapCycle, mapCycle, group, false, false));
 			if (mapList.Length != 0)
 			{
@@ -2255,7 +2255,7 @@ UMC_BuildOptionsError:BuildMapVoteItems(Handle:voteManager, Handle:result, Handl
 					//Get the map name from the nomination.
 					GetTrieString(trie, MAP_TRIE_MAP_KEY, mapName, sizeof(mapName));
 
-					// Add map to list of possible maps to be added to vote from the nominations 
+					// Add map to list of possible maps to be added to vote from the nominations
 					// if the map is valid (correct number of players, correct time)
 					if (!ignoreDupes && FindStringInVoteArray(mapName, MAP_TRIE_MAP_KEY, map_vote) != -1)
 					{
@@ -2311,7 +2311,7 @@ UMC_BuildOptionsError:BuildMapVoteItems(Handle:voteManager, Handle:result, Handl
 
 						// Add category name to display if enabled
 						if (cvar_display_cat.BoolValue)
-							if (StrContains(catName, "Combat", false) != -1)	
+							if (StrContains(catName, "Combat", false) != -1)
 								FormatEx(display, sizeof(display), "%s (Combat Surf)", display, catName);
 							else
 								FormatEx(display, sizeof(display), "%s (%s)", display, catName);
@@ -2393,7 +2393,7 @@ UMC_BuildOptionsError:BuildMapVoteItems(Handle:voteManager, Handle:result, Handl
 
 					//Add category name to menu item if enabled.
 					if (cvar_display_cat.BoolValue)
-						if (StrContains(catName, "Combat", false) != -1)	
+						if (StrContains(catName, "Combat", false) != -1)
 							FormatEx(display, sizeof(display), "%s (Combat Surf)", display, catName);
 						else
 							FormatEx(display, sizeof(display), "%s (%s)", display, catName);
@@ -2434,7 +2434,7 @@ UMC_BuildOptionsError:BuildMapVoteItems(Handle:voteManager, Handle:result, Handl
 		//We no longer need the nominations array, so we close the handle.
 		CloseHandle(nominationsFromCat);
 
-		// Add a map to the vote array from the current category while 
+		// Add a map to the vote array from the current category while
 		// maps still need to be added from the current category.
 		while (numMapsFromCat > 0)
 		{
@@ -2449,7 +2449,7 @@ UMC_BuildOptionsError:BuildMapVoteItems(Handle:voteManager, Handle:result, Handl
 				break;
 			}
 
-			// Remove the map from the category (so it cannot be selected again) and repick a map 
+			// Remove the map from the category (so it cannot be selected again) and repick a map
 			// if the map has already been added to the vote (through nomination or another category
 			if (!ignoreDupes && FindStringInVoteArray(mapName, MAP_TRIE_MAP_KEY, map_vote) != -1)
 			{
@@ -2836,7 +2836,7 @@ public UMC_OnFormatTemplateString(String:template[], maxlen, Handle:kv, const St
 }
 
 //Selects a random map from a category based off of the supplied weights for the maps.
-//    kv:     a mapcycle whose traversal stack is currently at the level of the category to choose 
+//    kv:     a mapcycle whose traversal stack is currently at the level of the category to choose
 //            from.
 //    buffer:    a string to store the selected map in
 //    key:  the key containing the weight information (for maps, 'weight', for cats, 'group_weight')
@@ -3500,7 +3500,7 @@ public Action:Handle_RunoffVoteTimer(Handle:timer, Handle:datapack)
 	LogUMCMessage("RUNOFF: Starting runoff vote.");
 
 	//Log an error and do nothing if another vote is currently running for some reason.
-	if (IsVMVoteInProgress(vM)) 
+	if (IsVMVoteInProgress(vM))
 	{
 		LogUMCMessage("RUNOFF: There is a vote already in progress, cannot start a new vote.");
 		return Plugin_Continue;
@@ -3736,7 +3736,7 @@ public Handle_CatVoteWinner(Handle:vM, const String:cat[], const String:disp[],
 		}
 
 		//Otherwise, there are no nominations to worry about so we just pick a map randomly from the winning category.
-		else 
+		else
 		{
 			GetRandomMap(kv, map, sizeof(map));
 			DisableVoteInProgress(vM);
@@ -4048,7 +4048,7 @@ DoMapChange(UMC_ChangeMapTime:when, Handle:kv, const String:map[], const String:
 
 	//Set the next map in SM
 	LogUMCMessage("Setting nextmap to: %s", map);
-	
+
 	if (isWs)
 		SetNextMap(workshopMap);
 	else
@@ -4117,8 +4117,8 @@ DoMapChange(UMC_ChangeMapTime:when, Handle:kv, const String:map[], const String:
 						ForceChangeInFive(workshopMap, reason);
 					else
 						ForceChangeInFive(map, reason);
-				} 
-				else 
+				}
+				else
 				{
 					AcceptEntityInput(iGameEnd, "EndGame");
 				}
@@ -4394,7 +4394,7 @@ FilterMapcycle(Handle:kv, Handle:originalMapcycle, bool:isNom=false, bool:forMap
 		FilterMapGroup(kv, originalMapcycle, isNom, forMapChange);
 
 		//Delete the group if there are no valid maps in it.
-		if (deleteEmpty) 
+		if (deleteEmpty)
 		{
 			if (!KvGotoFirstSubKey(kv))
 			{

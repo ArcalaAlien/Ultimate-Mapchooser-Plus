@@ -3,10 +3,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*************************************************************************
 *************************************************************************
-This plugin is free software: you can redistribute 
+This plugin is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License, or
-later version. 
+later version.
 
 This plugin is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -325,7 +325,7 @@ RemovePreviousMapsFromCycle()
 {
 	map_kv = CreateKeyValues("umc_rotation");
 	KvCopySubkeys(umc_mapcycle, map_kv);
-	FilterMapcycleFromArrays(map_kv, vote_mem_arr, vote_catmem_arr, GetConVarInt(cvar_vote_catmem));
+	FilterMapcycleFromArrays(view_as<KeyValues>(map_kv), view_as<ArrayList>(vote_mem_arr), view_as<ArrayList>(vote_catmem_arr), GetConVarInt(cvar_vote_catmem));
 }
 
 //Sets up the vote sounds.

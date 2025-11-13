@@ -3,10 +3,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*************************************************************************
 *************************************************************************
-This plugin is free software: you can redistribute 
+This plugin is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License, or
-later version. 
+later version.
 
 This plugin is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -534,10 +534,10 @@ bool VectorCompare(float vec1[3], float vec2[3])
 	for (int i; i < 3; i++)
 		if (vec1[i] == vec2[i])
 			matches++;
-	
+
 	if (matches == 3)
 		return true;
-	
+
 	return false;
 }
 
@@ -578,7 +578,7 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 public Action:OnPlayerChat(client, const String:command[], argc)
 {
 	//Return immediately if nothing was typed.
-	if (argc == 0) 
+	if (argc == 0)
 	{
 		return Plugin_Continue;
 	}
@@ -681,13 +681,13 @@ public Action Command_AFK(int client, int args)
 {
 	if (client == 0)
 		return Plugin_Handled;
-	
+
 	playerAFK[client] = !playerAFK[client];
 	if (playerAFK[client])
 		PrintToChat(client, "[RTV] You are now afk!");
 	else
 		PrintToChat(client, "[RTV] You are no longer afk!");
-	
+
 	return Plugin_Handled;
 }
 
@@ -949,7 +949,7 @@ UpdateRTVThreshold()
 	decl String:flags[64];
 	GetConVarString(cvar_voteflags, flags, sizeof(flags));
 	new count = GetClientWithFlagsCount(flags);
-	if (cvar_discount_afk.BoolValue) 
+	if (cvar_discount_afk.BoolValue)
 		count -= ReturnAFKPlayerCount();
 	rtv_threshold = (count > 1) ? RoundToCeil(float(count) * GetConVarFloat(cvar_rtv_needed)) : 1;
 }
@@ -981,7 +981,7 @@ public StartRTV()
 	else if (!vote_completed || postAction == 2)
 	{
 		//Do nothing if there is a vote already in progress.
-		if (!UMC_IsNewVoteAllowed("core")) 
+		if (!UMC_IsNewVoteAllowed("core"))
 		{
 			LogUMCMessage("There is a vote already in progress, cannot start a new vote.");
 			MakeRetryVoteTimer(StartRTV);

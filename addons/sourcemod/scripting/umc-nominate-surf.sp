@@ -3,10 +3,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*************************************************************************
 *************************************************************************
-This plugin is free software: you can redistribute 
+This plugin is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License, or
-later version. 
+later version.
 
 This plugin is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -262,7 +262,7 @@ public Action:OnPlayerChat(client, const String:command[], argc)
 
 				// Code based off of https://github.com/engvin/Ultimate-Mapchooser/blob/master/addons/sourcemod/scripting/umc-nominate.sp
 				KvRewind(map_kv);
-				
+
 				// Is the attempted nomination the same as the current map?
 				if (StrContains(currentMap, arg, false) != -1) {
 					PrintToChat(client, "[UMC] Cannot nominate current map!");
@@ -326,7 +326,7 @@ public Action:OnPlayerChat(client, const String:command[], argc)
 						return Plugin_Handled;
 					}
 					groupNamesArray.Close();
-	
+
 					KvRewind(map_kv);
 
 					KvJumpToKey(map_kv, groupName);
@@ -422,7 +422,7 @@ bool IsCommandHidden(char[] command)
 
 	if (FindCharInString(silentTriggers, command[0]))
 		return true;
-	
+
 	return false;
 }
 
@@ -513,7 +513,7 @@ public Action:Command_Nominate(client, args)
 
 			// Code based off of https://github.com/engvin/Ultimate-Mapchooser/blob/master/addons/sourcemod/scripting/umc-nominate.sp
 			KvRewind(map_kv);
-			
+
 			// Create an array list of all valid maps
 			ArrayList nomMapArray = view_as<ArrayList>(UMC_CreateValidMapArray(map_kv, umc_mapcycle, INVALID_GROUP, true, false));
 
@@ -732,14 +732,14 @@ public int RPList_Handler (Menu menu, MenuAction action, int param1, int param2)
 
 //Display list of nominated maps to client.
 void DisplayNominationList(int client) {
-	
+
 	// Rewind the original map KV
 	KeyValues maps = view_as<KeyValues>(map_kv);
 	maps.Rewind();
-	
+
 	// Get a list of categories
 	ArrayList catArray = view_as<ArrayList>(UMC_CreateValidMapGroupArray(maps, umc_mapcycle, false, false));
-	
+
 	if (catArray.Length == 0) {
 		PrintToChat(client, "[UMC] There are no maps available.");
 		catArray.Close();
@@ -750,7 +750,7 @@ void DisplayNominationList(int client) {
 
 	if (client != 0)
 		nomList.SetTitle("Nominated Maps");
-	else 
+	else
 		nomList.Close();
 
 	char catName[MAP_LENGTH];
@@ -762,18 +762,18 @@ void DisplayNominationList(int client) {
 		maps.GotoFirstSubKey();
 		do {
 			maps.GetSectionName(mapName, sizeof(mapName));
-			
+
 			if (UMC_IsMapNominatedEX(mapName)) {
 				numNoms++;
 				if (client != 0) {
-					
+
 					char disp[MAP_LENGTH * 2];
 					if (StrContains(mapName, "ws.") != -1)
 					{
 						FormatWorkshopUMCtoSM(mapName, mapName, sizeof(mapName));
 						GetMapDisplayName(mapName, mapName, sizeof(mapName));
 					}
-						
+
 					FormatEx(disp, sizeof(disp), "%s (%s)", mapName, catName);
 					nomList.AddItem("X", disp, ITEMDRAW_DISABLED);
 				}
@@ -808,13 +808,13 @@ void DisplayRPList(int client)
 		{
 			voteMemory.GetString(i, mapInfo, sizeof(mapInfo));
 			UMC_GetMapGroup(umc_mapcycle, mapInfo, mapGroup, sizeof(mapGroup));
-			
+
 			if (StrContains(mapInfo, "workshop/") != -1)
 				GetMapDisplayName(mapInfo, mapInfo, sizeof(mapInfo));
-			
+
 			if (mapGroup[0] != '\0')
 				FormatEx(mapInfo, sizeof(mapInfo), "%s (%s)", mapInfo, mapGroup);
-			
+
 			recentlyPlayed.AddItem("X", mapInfo, ITEMDRAW_DISABLED);
 		}
 	}
@@ -838,12 +838,12 @@ bool UMC_IsMapNominatedEX (char mapName[MAP_LENGTH])
 	KvCopySubkeys(umc_mapcycle, map_kv);
 
 	ArrayList groupNamesArray = view_as<ArrayList>(UMC_CreateValidMapGroupArray(map_kv, umc_mapcycle, true, false));
-	
+
 	if (!groupNamesArray) {
 		PrintToServer("UMC_IsMapNominatedEX: Unable to create group name array.");
 		return false;
 	}
-	
+
 	char groupArrayName[MAP_LENGTH];
 	for (int j; j < groupNamesArray.Length; j++) {
 		groupNamesArray.GetString(j, groupArrayName, sizeof(groupArrayName));
@@ -1236,7 +1236,7 @@ public Handle_NominationMenu(Handle:menu, MenuAction:action, client, param2)
 			}
 			else
 				PrintToChatAll("[UMC] %s has nominated %s (%s)", playerName, map, group);
-			
+
 			LogUMCMessage("%N has nominated '%s' from group '%s'", client, map, group);
 
 			//Close handles for stored data for the client's menu.
@@ -1357,11 +1357,11 @@ public UMC_DisplayMapCycle(client, bool:filtered)
 
 /**
  * 	Strips the surf map groups of "surf"
- * 
+ *
  *  @param groupName		Group name
  *  @param output			Output buffer.
  *  @param len				Buffer length.
- * 
+ *
  *  @return					True if stripped, false if not.
  */
 bool GetSurfGroupAbbrv(char[] groupName, char[] output, int len)

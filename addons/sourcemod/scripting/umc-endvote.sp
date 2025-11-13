@@ -3,10 +3,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*************************************************************************
 *************************************************************************
-This plugin is free software: you can redistribute 
+This plugin is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License, or
-later version. 
+later version.
 
 This plugin is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************
-*************************************************************************/   
+*************************************************************************/
 #pragma semicolon 1
 
 #include <sourcemod>
@@ -124,7 +124,7 @@ new String:current_map_name[MAP_LENGTH];
 //Sounds to be played at the start and end of votes.
 new String:vote_start_sound[PLATFORM_MAX_PATH], String:vote_end_sound[PLATFORM_MAX_PATH],
 	String:runoff_sound[PLATFORM_MAX_PATH];
-	 
+
 /* Forwards */
 new Handle:time_update_forward  = INVALID_HANDLE;
 new Handle:round_update_forward = INVALID_HANDLE;
@@ -372,7 +372,7 @@ public OnPluginStart()
 		HookEventEx("game_round_end",         Event_RoundEnd); //Hidden: Source, Neotokyo
 		HookEventEx("teamplay_win_panel",     Event_RoundEndTF2); //TF2
 		HookEventEx("arena_win_panel",        Event_RoundEndTF2); //TF2
-		HookEventEx("teamplay_restart_round", Event_RestartRound); //TF2  
+		HookEventEx("teamplay_restart_round", Event_RestartRound); //TF2
 		HookEventEx("cs_match_end_restart",   Event_RestartRound); //CS:GO
 		HookEventEx("round_win",              Event_RoundEnd); //Nuclear Dawn
 		HookEventEx("game_end",               Event_RoundEnd); //EmpiresMod
@@ -382,7 +382,7 @@ public OnPluginStart()
 	if (cvar_zpomaxrnds != INVALID_HANDLE || cvar_zpsmaxrnds != INVALID_HANDLE)
 	{
 		HookEventEx("round_win",          Event_RoundEndZPS);
-		HookEventEx("game_round_restart", Event_RestartRoundZPS); 
+		HookEventEx("game_round_restart", Event_RestartRoundZPS);
 	}
 
 	//Hook score.
@@ -442,7 +442,7 @@ public OnConfigsExecuted()
 	{
 		team_wincounts[i] = 0;
 	}
-	 
+
 	new bool:mapcycleLoaded = ReloadMapcycle();
 
 	// Make end-of-map vote timers if the mapcycle was loaded successfully AND
@@ -494,7 +494,7 @@ public Event_PlayerDeath(Handle:evnt, String:name[], bool:dontBroadcast)
 		{
 			return;
 		}
-		 
+
 		new startfrags = GetConVarInt(cvar_start_frags);
 		new frags = GetClientFrags(fragger) + 1;
 
@@ -559,7 +559,7 @@ public Event_RoundEnd(Handle:evnt, const String:name[], bool:dontBroadcast)
 	round_counter++;
 	team_wincounts[winner]++;
 
-	if (vote_enabled) 
+	if (vote_enabled)
 	{
 		CheckWinLimit(team_wincounts[winner], winner);
 		CheckMaxRounds();
@@ -609,7 +609,7 @@ public Event_RoundEndTF2(Handle:evnt, const String:name[], bool:dontBroadcast)
 	}
 }
 
-//Called when a round ends in ZPS. 
+//Called when a round ends in ZPS.
 public Event_RoundEndZPS(Handle:evnt, const String:name[], bool:dontBroadcast)
 {
 	if (vote_roundend)
@@ -621,7 +621,7 @@ public Event_RoundEndZPS(Handle:evnt, const String:name[], bool:dontBroadcast)
 	//Update the round "timer"
 	round_counter++;
 
-	if (vote_enabled) 
+	if (vote_enabled)
 	{
 		CheckMaxRounds();
 	}
@@ -764,7 +764,7 @@ UpdateOtherTimers()
 		{
 			LogUMCMessage("End of map vote will appear after %i more rounds.", start);
 		}
-		 
+
 		//Update our vote warnings.
 		Call_StartForward(round_update_forward);
 		Call_PushCell(start);
@@ -865,7 +865,7 @@ RemovePreviousMapsFromCycle()
 {
 	map_kv = CreateKeyValues("umc_rotation");
 	KvCopySubkeys(umc_mapcycle, map_kv);
-	FilterMapcycleFromArrays(map_kv, vote_mem_arr, vote_catmem_arr, GetConVarInt(cvar_vote_catmem));
+	FilterMapcycleFromArrays(view_as<KeyValues>(map_kv), view_as<ArrayList>(vote_mem_arr), view_as<ArrayList>(vote_catmem_arr), GetConVarInt(cvar_vote_catmem));
 }
 
 //************************************************************************************************//
@@ -937,7 +937,7 @@ public Handle_FraglimitChange(Handle:convar, const String:oldVal[], const String
 	{
 		LogUMCMessage("End of map vote frag trigger disabled.");
 	}
-	else 
+	else
 	{
 		// Does nothing
 		LogUMCMessage("DEBUG: New limit and old value are not greater than 0 for fraglimit... potential problem?");
@@ -1074,7 +1074,7 @@ CheckMaxRounds()
 {
 	if (cvar_maxrounds != INVALID_HANDLE || cvar_zpomaxrnds != INVALID_HANDLE || cvar_zpsmaxrnds != INVALID_HANDLE)
 	{
-		new maxrounds; 
+		new maxrounds;
 
 		// Look for ZPS specific rounds first, otherwise assume its mp_maxrounds
 		if (cvar_zpomaxrnds != INVALID_HANDLE && strncmp(current_map_name, "zpo_", 4) == 0)
@@ -1140,7 +1140,7 @@ GetTopTwoTeamScores(&first, &second=0)
 		{
 			second = score;
 		}
-		else 
+		else
 		{
 			LogUMCMessage("DEBUG: Score is not greater than first or second team in GetTopTwoTeamScores... potential problem?");
 		}
@@ -1331,7 +1331,7 @@ public StartMapVote()
 	LogUMCMessage("Starting an end of map vote.");
 
 	//Log an error and retry vote if another vote is currently running for some reason.
-	if (!UMC_IsNewVoteAllowed("core")) 
+	if (!UMC_IsNewVoteAllowed("core"))
 	{
 		LogUMCMessage("There is a vote already in progress, cannot start a new vote.");
 		MakeRetryVoteTimer(StartMapVote);
