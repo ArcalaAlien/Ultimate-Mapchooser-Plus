@@ -3021,7 +3021,7 @@ DisplayTierMessage(timeleft)
 {
 	decl String:notification[10];
 	GetConVarString(cvar_vote_tierdisplay, notification, sizeof(notification));
-	PrintCenterTextAll("%T", "Another Vote", timeleft);
+	PrintCenterTextAll("%t", "Another Vote", timeleft);
 	//DisplayServerMessage(notification, "%t", "Another Vote", timeleft);
 }
 
