@@ -2059,6 +2059,7 @@ bool:PerformVote(Handle:voteManager, UMC_VoteType:type, Handle:options,
 
 enum UMC_BuildOptionsError
 {
+	BuildOptionsError_InvalidParameters,
 	BuildOptionsError_InvalidMapcycle,
 	BuildOptionsError_NoMapGroups,
 	BuildOptionsError_NotEnoughOptions,
@@ -2097,7 +2098,7 @@ Handle:BuildVoteItems(Handle:vM, Handle:kv, Handle:mapcycle, &UMC_VoteType:type,
 			dontChange, allowDupes, strictNoms, .exclude=exclude);
 	}
 
-	if (error == BuildOptionsError_InvalidMapcycle || error == BuildOptionsError_NoMapGroups)
+	if (error == BuildOptionsError_InvalidMapcycle || error == BuildOptionsError_NoMapGroups || error == BuildOptionsError_InvalidParameters)
 	{
 		CloseHandle(result);
 		result = INVALID_HANDLE;
