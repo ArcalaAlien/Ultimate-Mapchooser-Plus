@@ -2066,6 +2066,8 @@ enum UMC_BuildOptionsError
 	BuildOptionsError_Success
 };
 
+#include <umc-core-updates.sp>
+
 //Build and returns a new vote menu.
 Handle:BuildVoteItems(Handle:vM, Handle:kv, Handle:mapcycle, &UMC_VoteType:type, bool:scramble,
 	bool:allowDupes, bool:strictNoms, bool:exclude, bool:extend, bool:dontChange)
@@ -4197,7 +4199,7 @@ bool:IsValidMap(Handle:kv, Handle:mapcycle, const String:groupName[], bool:isNom
 	if (StrContains(mapName, "@ws.") != -1)
 		return true;
 
-	if (!IsMapValid(mapName))
+	if (!IsMapValid(mapName) && !IsWorkshopMap(mapName))
 	{
 		LogUMCMessage("WARNING: Map \"%s\" does not exist on the server. (Group: \"%s\")", mapName, groupName);
 		return false;

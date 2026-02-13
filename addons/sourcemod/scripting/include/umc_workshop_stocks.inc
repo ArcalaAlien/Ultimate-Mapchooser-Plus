@@ -74,7 +74,7 @@ stock void ExtractWorkshopMapNameSM(const char[] input, char[] output, int len)
 }
 
 /**
- *  Get the map id from the workshop link.
+ *  Get the map id from the UMC workshop link.
  * 
  *  @param input 	Workshop link (UMC Format) mapname@ws.ugc00000000
  *  @param output 	map id
@@ -89,9 +89,30 @@ stock void ExtractWorkshopMapIdUMC(const char[] input, char[] output, int len)
 	strcopy(output, len, inputSplit[1]);
 }
 
+/**
+ *  Get the map id from the workshop link.
+ * 
+ *  @param input 	Workshop link (Steam Format) workshop/00000000
+ *  @param output 	map id
+ *  @param len 		length of buffer.
+ * 
+ *  @noreturn
+ */
 stock void ExtractWorkshopMapIdSM(const char[] input, char[] output, int len)
 {
 	char inputSplit[2][64];
 	ExplodeString(input, ".ugc", inputSplit, 2, 64);
 	strcopy(output, len, inputSplit[1]);
+}
+
+/**
+ *  Check if the input string is a workshop map.
+ * 
+ *  @param input 	String to check
+ *  @return 		True if it's a workshop map, false otherwise.
+ */
+stock bool IsWorkshopMap(const char[] input)
+{
+	return (StrContains(input, "@ws.ugc") != -1 ||
+			StrContains(input, "workshop/") != -1);
 }
