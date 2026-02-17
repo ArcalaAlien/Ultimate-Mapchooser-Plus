@@ -12,7 +12,7 @@
  *  @param extendOption					Do we add the extend option?
  *  @param dontChangeOption				Do we add the don't change option?
  *  @param ignoreDuplicateNominations	Whether to ignore duplicate nominations in the vote menu or not.
- *  @param strictNominations    		Whether to limit the amount of nominations added to the vote by the maps_invote setting for the category or not.
+ *  @param nominationsRestricted    		Whether to limit the amount of nominations added to the vote by the maps_invote setting for the category or not.
  *  @param ignoreInVoteSetting			Whether to ignore the maps_invote setting for categories
  *  @param applyExclusionRules			Calls IsValidMap()
  *  @param fromCategory					If specified, only build the vote menu with maps from this category.
@@ -24,7 +24,7 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
                                           Handle currentMapcycleH, bool scrambleVote, 
                                           bool extendOption, bool dontChangeOption, 
                                           bool ignoreDuplicateNominations=false, 
-                                          bool strictNominations=false,
+                                          bool nominationsRestricted=false,
                                           bool ignoreInVoteSetting=false, 
                                           bool applyExclusionRules=true, 
                                           const char[] fromCategory="") {
@@ -46,7 +46,7 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 	copyKV.Import(currentRotation);
 
 	if (applyExclusionRules)
-		FilterMapcycleUpdated(copyKV, currentMapcycle, .deleteEmpty=false);
+		FilterMapcycleEx(copyKV, currentMapcycle, .deleteEmptyGroups=false);
 
 	//Log an error and return nothing if it cannot find a category.
 	if (!copyKV.GotoFirstSubKey())
@@ -72,18 +72,19 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 		mapsNeededFromCategory = 0,
 		nominationsFetched = 0,
 		mapsInVote = 0,
-		nextIndex = 0;
+		nextIndex = 0,
 		tierAmount = view_as<ConVar>(cvar_vote_tieramount).IntValue;
 
     Handle mapVoteH;
     GetTrieValue(voteManagerH, "map_vote", mapVoteH);
-	ArrayList nominationsFromCategory	= new ArrayList(),
-			  tempCategoryNominations 	= new ArrayList(),
+	ArrayList nominationsFromCategory,
+			  tempCategoryNominations,
 			  nameArray 				= new ArrayList(ByteCountToCells(MAP_LENGTH)),
 			  weightArray 				= new ArrayList(),
               gatheredMapsArray 		= new ArrayList(),
 			  mapVote 					= view_as<ArrayList>(mapVoteH),
 			  mapVoteDisplay 			= new ArrayList(ByteCountToCells(MAP_LENGTH));
+	KeyValues nominationKV;
 
 	do {
 		if (fromCategory[0]){
@@ -122,11 +123,11 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 		// If mapsNeededFromCategory is negative that means
 		// that all map slots are taken by nominations.
 		//
-		// strictNominations lets us know if we should
+		// nominationsRestricted lets us know if we should
 		// limit the amount of nominations to add by the
 		// maps_invote setting for the category.
-		KeyValues nominationKV = new KeyValues("umc_mapcycle");
-		if (mapsNeededFromCategory < 0 && strictNominations) {
+		nominationKV = new KeyValues("umc_mapcycle");
+		if (mapsNeededFromCategory < 0 && nominationsRestricted) {
 			//////
 			//The piece of code inside this block is for the case where the current category's
 			//nominations exceeds it's number of maps allowed in the vote.
@@ -180,6 +181,7 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 					// all of our nominations in before
 					// processing regular maps. 
 					gatheredMapsArray.Push(nomination);
+					nominationsFetched++;
 				}
 				int spotsInVoteLeft = (mapsInVote < nominationsFetched) ? mapsInVote : nominationsFetched;
 
@@ -197,22 +199,12 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 
 						// Set up what nextIndex of the vote we'll add
 						// this nomination to.
-						nextIndex = GetNextMenuIndex(mapsAddedToVote, scrambleVote);
+						nextIndex = GetNextMenuIndex(mapsInVote, scrambleVote);
 
 						// Handle the map display string.
 						KeyValues displayMapCycle = new KeyValues("umc_mapcycle");
 						displayMapCycle.Import(nominationKV);
-						GetMapDisplayStringUpdated(displayMapCycle, nomGroupBuffer, mapName, displayTemplate, mapDisplay, sizeof(mapDisplay));
-						displayMapCycle.Close();
-
-						if (cvar_display_cat.BoolValue)
-							FormatEx(mapDisplay, sizeof(mapDisplay), "%s (%s)", mapDisplay, categoryName);
-					
-						StringMap mapInfo = new StringMap();
-						mapInfo.SetValue(MAP_TRIE_MAP_KEY, mapName);
-						mapInfo.SetValue(MAP_TRIE_GROUP_KEY, categoryName);
-
-						KeyValues mapInfoCycle = new KeyValues("umc_mapcycle");
+					GetMapDisplayStringEx(displayMapCycle, nomGroupBuffer, mapName, displayTemplate, mapDisplay, sizeof(mapDisplay));
 						mapInfoCycle.Import(nominationKV);
 						mapInfo.SetValue("mapcycle", view_as<Handle>(mapInfoCycle));
 					
@@ -233,10 +225,9 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 							);
 					}
 
-					nameArray.Close();
-					weightArray.Close();
-					gatheredMapsArray.Close();
-
+					if (nominationsFromCategory != null)
+						nominationsFromCategory.Close();
+					
 					mapsNeededFromCategory = mapsInVote - numNominations;
 				} else {
 					// Otherwise we handle the nominations we do have,
@@ -245,7 +236,7 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 					// mapcycle.
 					StringMap nomination;
 					char nomGroupBuffer[MAP_LENGTH]; 
-					for (int i; i < 0; i++) {
+					for (int i; i < nominationsFromCategory.Length; i++) {
 						nomination = view_as<StringMap>(nominationsFromCategory.Get(i));
 						nomination.GetString(MAP_TRIE_MAP_KEY, mapName, sizeof(mapName));
 
@@ -265,13 +256,7 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 						// Handle the map display string.
 						KeyValues displayMapCycle = new KeyValues("umc_mapcycle");
 						displayMapCycle.Import(nominationKV);
-						GetMapDisplayStringUpdated(displayMapCycle, nomGroupBuffer, mapName, displayTemplate, mapDisplay, sizeof(mapDisplay));
-						displayMapCycle.Close();
-
-						if (cvar_display_cat.BoolValue)
-							FormatEx(mapDisplay, sizeof(mapDisplay), "%s (%s)", mapDisplay, categoryName);
-					
-						StringMap mapInfo = new StringMap();
+						GetMapDisplayStringEx(displayMapCycle, nomGroupBuffer, mapName, displayTemplate, mapDisplay, sizeof(mapDisplay));
 						mapInfo.SetValue(MAP_TRIE_MAP_KEY, mapName);
 						mapInfo.SetValue(MAP_TRIE_GROUP_KEY, categoryName);
 
@@ -290,6 +275,9 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 								mapName, categoryName
 							);
 					} // end of nomination loop
+
+					if (nominationsFromCategory != null)
+						nominationsFromCategory.Close();
 				}
 			} 
 		} // Here we've finally handled adding all nominations.
@@ -306,8 +294,6 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 					mapsNeededFromCategory, categoryName
 				);
 		}
-
-		nominationsFromCategory.Close();
 
 		int nomIndex = 0;
 		nextIndex = 0;
@@ -337,7 +323,6 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 			nomIndex = FindNominationIndex(mapName, categoryName);
 			if (nomIndex != -1) {
 				int owner;
-				KeyValues nominationKV;
 				StringMap nomination = view_as<StringMap>(GetArrayCell(nominations_arr, nomIndex));
 			
 				nomination.GetValue("client", owner);
@@ -361,7 +346,7 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 
 			KeyValues displayCycle = new KeyValues("umc_mapcycle");
 			displayCycle.Import(currentRotation);
-			GetMapDisplayStringUpdated(displayCycle, categoryName, mapName, displayTemplate, mapDisplay, sizeof(mapDisplay));
+			GetMapDisplayStringEx(displayCycle, categoryName, mapName, displayTemplate, mapDisplay, sizeof(mapDisplay));
 			displayCycle.Close();
 
 			if (cvar_display_cat.BoolValue)
@@ -382,7 +367,7 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 				InsertArrayString(mapVoteDisplay, nextIndex, mapDisplay);
 			} else {
 				// Otherwise we'll just set it to the next position.
-				nextIndex = GetNextMenuIndex(mapsAddedToVote, scrambleVote);
+				nextIndex = GetNextMenuIndex(mapsInVote, scrambleVote);
 				InsertArrayCell(mapVote, nextIndex, view_as<Handle>(mapInfo));
 				InsertArrayString(mapVoteDisplay, nextIndex, mapDisplay);
 			}
@@ -392,15 +377,24 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 			copyKV.DeleteKey(mapName);
 			mapsNeededFromCategory--;
 		} // End adding non-nominated maps
+
+		// Set up arrays for next loop!
+		nameArray.Clear();
+		weightArray.Clear();
+		gatheredMapsArray.Clear();
 	} while (copyKV.GotoNextKey()); // Do this for each category.
 
+	nameArray.Close();
+	weightArray.Close();
+	gatheredMapsArray.Close();
 	copyKV.Close();
 	// Array list full of numbers corresponding to
 	// each available menu slot.
 	ArrayList voteInfoOptArray = view_as<ArrayList>(BuildNumArray(mapsInVote));
-	StringMap voteItem = new StringMap();
+	StringMap voteItem;
 	char menuBuffer[MAP_LENGTH * 2];
 	for (int i = 0; i < mapsInVote; i++) {
+		voteItem = new StringMap();
 		voteInfoOptArray.GetString(i, menuBuffer, sizeof(menuBuffer));
 		voteItem.SetString("info", menuBuffer);
 		mapVoteDisplay.GetString(i, menuBuffer, sizeof(menuBuffer));
@@ -412,8 +406,6 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 	voteInfoOptArray.Close();
 
 	if (extendOption) {
-		voteItem.Close();
-
 		FormatEx(displayTemplate,
 				 sizeof(displayTemplate),
 				 "%T",
@@ -430,8 +422,6 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 	}
 
 	if (dontChangeOption) {
-		voteItem.Close();
-		
 		FormatEx(displayTemplate,
 				 sizeof(displayTemplate),
 				 "%T",
@@ -441,8 +431,8 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 		voteItem.SetString("info", DONT_CHANGE_OPTION);
 		voteItem.SetString("display", displayTemplate);
 
-		if (view_as<ConVar>(cvar_extend_display).BoolValue)
-			InsertArrayCell(result, 0, view_as<Handle>(voteItem));
+		if (view_as<ConVar>(cvar_dontchange_display).BoolValue)
+			InsertArrayCell(resultH, 0, view_as<Handle>(voteItem));
 		else
 			result.Push(view_as<Handle>(voteItem));
 	}
@@ -450,8 +440,10 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 	return BuildOptionsError_Success;
 }
 
+
 /**
- *  Builds the vote menu for category voting.
+ *  DEPRECATED?
+ *  Fills the vote menu with maps from a category.
  *  I'm keeping the original function sigature for now,
  *  but I will eventually rework the entire system to
  *  work with modern SourceMod syntax.
@@ -459,8 +451,8 @@ UMC_BuildOptionsError BuildMapVoteItemsEx(Handle voteManagerH,
 UMC_BuildOptionsError BuildCatVoteItemsEx(Handle voteManagerH, Handle resultH, 
                                           Handle currentRotationH, Handle currentMapcycleH,
 										  bool scrambleVote, bool extendOption,
-                                          bool dontChangeOption, bool strictNominations=false, 
-                                          bool excludeEmptyCategories=true) {
+                                          bool dontChangeOption, bool nominationsRestricted=false, 
+                                          bool applyExclusionRules=true) {
     if (voteManagerH == INVALID_HANDLE ||
         resultH == INVALID_HANDLE ||
         currentRotationH == INVALID_HANDLE ||
@@ -488,19 +480,38 @@ UMC_BuildOptionsError BuildCatVoteItemsEx(Handle voteManagerH, Handle resultH,
     bool verboseLogs = view_as<ConVar>(cvar_logging).BoolValue;
     // TODO: Implement custom display templating for categories.
     bool categoryHasNominations = false;
-    int  numNominations = 0;
+    int  numNominations = 0,
+		 numCatsInVote = 0;
     char categoryName[MAP_LENGTH];
          //categoryDisplay[MAP_LENGTH];
          //displayTemplate[MAP_LENGTH];
-    ArrayList categoriesInVote;
-
+    ArrayList categoriesInVote = new ArrayList();
     KeyValues displayMapcycle;
 
     do {
         categoryHasNominations = false;
         copyKV.GetSectionName(categoryName, sizeof(categoryName));
         
-        if (excludeEmptyCategories) {
+        if (!IsValidCat(view_as<Handle>(copyKV), view_as<Handle>(currentMapcycle)) ||
+			!copyKV.GotoFirstSubKey()) {
+            if (verboseLogs)
+                LogUMCMessage(
+                    "VOTE MENU: (Verbose) Skipping map group '%s' because it has no valid maps.",
+                    categoryName
+                );
+            continue;
+        }
+
+        if (copyKV.GetNum("maps_invote", 1) == 0) {
+            if (verboseLogs)
+                LogUMCMessage(
+                    "VOTE MENU: (Verbose) Skipping map group '%s' because it has no maps allowed in the vote. (See maps_invote setting)",
+                    categoryName
+                );
+            continue;
+        }
+
+        if (applyExclusionRules) {
             ArrayList categoryNominations = view_as<ArrayList>(GetCatNominations(categoryName));
             numNominations = categoryNominations.Length;
 
@@ -530,42 +541,121 @@ UMC_BuildOptionsError BuildCatVoteItemsEx(Handle voteManagerH, Handle resultH,
 
                 nominationKV.Close();
             }
+			// Handling empty category here.
 
             categoryNominations.Close();
-            continue;
-        }
+        } else {
+			categoryHasNominations = true;
+			copyKV.GoBack();
+		}
 
-        copyKV.GoBack();
-        if (!IsValidCat(view_as<Handle>(copyKV), view_as<Handle>(currentMapcycle))) {
-            if (verboseLogs)
-                LogUMCMessage(
-                    "VOTE MENU: (Verbose) Skipping map group '%s' because it has no valid maps.",
-                    categoryName
-                );
-            continue;
-        }
+		// If we don't have any nominations in
+		// the category.
+		if (!categoryHasNominations) {
 
-        if (copyKV.GetNum("maps_invote", 1) == 0) {
-            if (verboseLogs)
-                LogUMCMessage(
-                    "VOTE MENU: (Verbose) Skipping map group '%s' because it has no maps allowed in the vote. (See maps_invote setting)",
-                    categoryName
-                );
-            continue;
-        }
+			// Let's check to see if the group is
+			// supposed to be excluded from the vote.
+			if (!IsValidCat(view_as<Handle>(copyKV), currentMapcycleH)) {
+				if (verboseLogs)
+                    LogUMCMessage(
+                        "VOTE MENU: (Verbose) Skipping excluded map group '%s'.",
+                        categoryName
+                    );
 
-        if (verboseLogs)
-            LogUMCMessage(
-                "VOTE MENU: (Verbose) Adding map group '%s' to the vote.",
-                categoryName
-            );
+				// Skip the group if it is
+				continue;
+			}
 
+			// Now we check to see if the group is
+			// allowed to have any maps in the vote.
+			if (copyKV.GetNum("maps_invote", 1) < 1 && nominationsRestricted) {
+				if (verboseLogs)
+                    LogUMCMessage(
+                        "VOTE MENU: (Verbose) Skipping map group '%s' due to \"maps_invote\" setting of 0.",
+                        categoryName
+                    );
+				
+				continue;
+			}
+		}
+
+		//We're gonna add the category to the array.
         InsertArrayString(view_as<Handle>(categoriesInVote),
                           GetNextMenuIndex(categoriesInVote.Length, scrambleVote),
                           categoryName);
 
-        
+		// We've aded a category to the vote!
+		if (verboseLogs)
+            LogUMCMessage(
+                "VOTE MENU: (Verbose) Adding map group '%s' to the vote.",
+                categoryName
+            );
+        numCatsInVote++;
     } while (copyKV.GotoNextKey());
+
+	// Now that we've handled getting categories,
+	// we can close the copy mapcycle.
+	copyKV.Close();
+
+	// We couldn't find any categories in
+	// the UMC mapcycle.
+	if (categoriesInVote.Length == 0) {
+        if (verboseLogs)
+            LogUMCMessage("VOTE MENU: (Verbose) No valid map groups found for the vote.");
+
+		categoriesInVote.Close();
+        return BuildOptionsError_NoMapGroups;
+	
+	// If we only have one group
+	// we only need to run a map vote.
+	} else if (categoriesInVote.Length == 1) {
+		if (verboseLogs)
+            LogUMCMessage("VOTE MENU: (Verbose) Not enough groups available for group vote, performing map vote with only group available.");
+		
+		categoriesInVote.Close();
+        return BuildOptionsError_NotEnoughOptions;
+    }
+
+	StringMap voteItem;
+	char categoryNameBuffer[MAP_LENGTH];
+
+	for (int i; i < numCatsInVote; i++) {
+		voteItem = new StringMap();
+        categoriesInVote.GetString(i, categoryNameBuffer, sizeof(categoryNameBuffer));
+        voteItem.SetString("info", categoryNameBuffer);
+		voteItem.SetString("display", categoryNameBuffer);
+		result.Push(view_as<Handle>(voteItem));
+    }
+
+	if (categoriesInVote != null)
+		categoriesInVote.Close();
+
+	if (extendOption) {
+		voteItem = new StringMap();
+		voteItem.SetString("info", EXTEND_MAP_OPTION);
+
+		// TODO: Replace with translation string
+		voteItem.SetString("display", "Extend Category");
+
+		if (view_as<ConVar>(cvar_extend_display).BoolValue)
+			InsertArrayCell(resultH, 0, view_as<Handle>(voteItem));
+		else
+			result.Push(view_as<Handle>(voteItem));
+	}
+
+	if (dontChangeOption) {
+		voteItem = new StringMap();
+		voteItem.SetString("info", DONT_CHANGE_OPTION);
+
+		// TODO: Replace with translation string
+		voteItem.SetString("display", "Don't Change Category");
+
+		if (view_as<ConVar>(cvar_dontchange_display).BoolValue)
+			InsertArrayCell(resultH, 0, view_as<Handle>(voteItem));
+		else
+			result.Push(view_as<Handle>(voteItem));
+	}
+	return BuildOptionsError_Success;
 }
 
 //Calls the templating system to format a map's display string.
@@ -574,16 +664,17 @@ UMC_BuildOptionsError BuildCatVoteItemsEx(Handle voteManagerH, Handle resultH,
 //  map:    Name of the map we're getting display info for.
 //  buffer: Buffer to store the display string.
 //  maxlen: Maximum length of the buffer.
-void GetMapDisplayStringUpdated(KeyValues mapCycle, 
+void GetMapDisplayStringEx(Handle currentMapcycle, 
 						   const char[] mapGroup,
 						   const char[] mapName,
 						   const char[] displayTemplate,
 						   char[] resultBuffer,
 						   int maxLen) {
+	KeyValues mapcycle = view_as<KeyValues>(currentMapcycle);
 	strcopy(resultBuffer, maxLen, "");
 
-	if (mapCycle.JumpToKey(mapGroup) &&
-		mapCycle.JumpToKey(mapName)) {
+	if (mapcycle.JumpToKey(mapGroup) &&
+		mapcycle.JumpToKey(mapName)) {
 		
 		// TODO: Implement once I've finished
 		// workshop name caching.
@@ -591,33 +682,38 @@ void GetMapDisplayStringUpdated(KeyValues mapCycle,
 			
 		// }
 		
-		mapCycle.GetString("display", resultBuffer, maxLen, displayTemplate);
-		mapCycle.GoBack();
-		mapCycle.GoBack();
+		mapcycle.GetString("display", resultBuffer, maxLen, displayTemplate);
+		mapcycle.GoBack();
+		mapcycle.GoBack();
 	}
 
 	Call_StartForward(template_forward);
 	Call_PushStringEx(resultBuffer, maxLen, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_PushCell(maxLen);
-	Call_PushCell(view_as<Handle>(mapCycle));
+	Call_PushCell(currentMapcycle);
 	Call_PushString(mapName);
 	Call_PushString(mapGroup);
 	Call_Finish();
 }
 
 //Filters a mapcycle with all invalid entries filtered out.
-void FilterMapcycleUpdated(KeyValues copyKV, KeyValues currentRotation,
-						   bool isNom=false, bool forMapChange=true, bool deleteEmpty=true)
+void FilterMapcycleEx(Handle kvToFilter,
+					  Handle currentMapcycle,
+					  bool isNomination=false, 
+					  bool isForMapChange=true, 
+					  bool deleteEmptyGroups=true)
 {	
+	KeyValues copyKV = view_as<KeyValues>(kvToFilter);
+
 	//Do nothing if there are no map groups.
 	if (!copyKV.GotoFirstSubKey())
 		return;
 
 	char group[MAP_LENGTH];
-	while (copyKV.GotoNextKey()) {
-		FilterMapGroupUpdated(copyKV, currentRotation, isNom, forMapChange);
+	do {
+		FilterMapGroupEx(copyKV, currentMapcycle, isNomination, isForMapChange);
 
-		if (deleteEmpty) {
+		if (deleteEmptyGroups) {
 			if (!copyKV.GotoFirstSubKey()) {
 				copyKV.GetSectionName(group, sizeof(group));
 
@@ -630,22 +726,30 @@ void FilterMapcycleUpdated(KeyValues copyKV, KeyValues currentRotation,
 
 			copyKV.GoBack();
 		}
-	}
-
+	} while (copyKV.GotoNextKey());
 	copyKV.GoBack();
 }
 
-//Filters the kv at the level of the map group.
-void FilterMapGroupUpdated(KeyValues copyKV, KeyValues currentRotation, bool isNom=false, bool forMapChange=true)
+/**
+ *  Filters all of the maps in a given category.
+ *  The cursor of the KeyValue object has to be
+ *  at the category that you want to filter.
+ */
+void FilterMapGroupEx(Handle kvToFilter, 
+					  Handle currentMapcycle,
+					  bool isNomination=false, 
+					  bool isForMapChange=true)
 {
+	KeyValues copyKV = view_as<KeyValues>(kvToFilter);
+
 	char group[MAP_LENGTH];
 	copyKV.GetSectionName(group, sizeof(group));
 	if (!copyKV.GotoFirstSubKey())
 		return;
 
 	char mapName[MAP_LENGTH];
-	while (copyKV.GotoNextKey()) {
-		if (!IsValidMap(copyKV, currentRotation, group, isNom, forMapChange)) {
+	do {
+		if (!IsValidMapEx(copyKV, currentMapcycle, group, isNomination, isForMapChange)) {
 			copyKV.GetSectionName(mapName, sizeof(mapName));
 
 			// If we're unable to delete a key
@@ -653,9 +757,7 @@ void FilterMapGroupUpdated(KeyValues copyKV, KeyValues currentRotation, bool isN
 			if (copyKV.DeleteThis() == -1)
 				return;
 		}
-
-	}
-
+	} while (copyKV.GotoNextKey());
 	copyKV.GoBack();
 }
 
@@ -723,7 +825,10 @@ bool IsValidMapEx(Handle kvToCheck,
  *  Checks if a category is valid by checking
  *  if it contains at least one valid map.
  * 
- * 
+ *  @param kvToCheck        The KeyValues object who's cursor is at the category to check.
+ *  @param currentMapcycle  The current mapcycle KeyValues object.
+ *  @param isNomination     Whether the map is being checked for a nomination.
+ *  @param isForMapChange   Whether the map is being checked for a map change.
  * 
 */
 bool IsValidCatEx(Handle kvToCheck,
@@ -760,8 +865,33 @@ bool IsValidCatEx(Handle kvToCheck,
 	return false;
 }
 
-bool IsValidMapFromCatEx() {
-	
+/**
+ *  Checks if a map is valid within a category.
+ * 
+ *  @param kvToCheck        The KeyValues object who's cursor is at the category to check.
+ *  @param currentMapcycle  The current mapcycle KeyValues object.
+ *  @param mapName          The name of the map to check.
+ *  @param isNomination     Whether the map is being checked for a nomination.
+ *  @param isForMapChange   Whether the map is being checked for a map change.
+ */
+bool IsValidMapFromCatEx(Handle kvToCheck,
+						 Handle currentMapcycle,
+						 const char[] mapName,
+						 bool isNomination = false,
+						 bool isForMapChange = true) {
+	KeyValues currentRotation = view_as<KeyValues>(kvToCheck);
+	KeyValues mapcycle = view_as<KeyValues>(currentMapcycle);
+
+	char categoryName[MAP_LENGTH];
+	currentRotation.GetSectionName(categoryName, sizeof(categoryName));
+
+	if (!currentRotation.JumpToKey(mapName))
+		return false;
+
+	bool result = IsValidMapEx(kvToCheck, currentMapcycle, categoryName, isNomination, isForMapChange);
+
+	currentRotation.GoBack();
+	return result;
 }
 
 
