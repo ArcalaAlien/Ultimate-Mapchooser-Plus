@@ -22,6 +22,7 @@ along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <sourcemod>
 #include <umc-core>
 #include <umc_utils>
+#include <umc_workshop_stocks>
 
 public Plugin:myinfo =
 {
@@ -50,6 +51,15 @@ public OnConfigsExecuted()
 		decl String:CurrentMapGroup[64], String:CurrentMap[64];
 
 		GetCurrentMap(CurrentMap, sizeof(CurrentMap));
+
+		// Convert workshop format to UMC format for KeyValues lookup
+		if (StrContains(CurrentMap, "workshop/") == 0)
+		{
+    		decl String:umcFormat[MAP_LENGTH];
+    		FormatWorkshopSMtoUMC(CurrentMap, umcFormat, sizeof(umcFormat));
+    		strcopy(CurrentMap, sizeof(CurrentMap), umcFormat);
+		}
+
 		KvFindGroupOfMap(kv, CurrentMap, CurrentMapGroup, sizeof(CurrentMapGroup));
 
 		if (KvJumpToKey(kv, CurrentMapGroup))
@@ -126,18 +136,29 @@ public UMC_OnNextmapSet(Handle:kv, const String:map[], const String:group[], con
 			ServerCommand(gPVCommand);
 		}
 
-		if (KvJumpToKey(kv, map))
+		// Convert workshop format to UMC format for KeyValues lookup
+		decl String:mapLookup[MAP_LENGTH];
+		if (StrContains(map, "workshop/") == 0)
 		{
-			KvGetString(kv, COMMAND_KEY, map_command, sizeof(map_command), "");
-			KvGetString(kv, POSTVOTE_COMMAND_KEY, mPVCommand, sizeof(mPVCommand), "");
-			KvGetString(kv, PRE_COMMAND_KEY, map_precommand, sizeof(map_precommand), "");
+    		FormatWorkshopSMtoUMC(map, mapLookup, sizeof(mapLookup));
+		}
+		else
+		{
+    		strcopy(mapLookup, sizeof(mapLookup), map);
+		}
 
-			if (strlen(mPVCommand) > 0)
-			{
-				LogUMCMessage("SETUP: Executing map postvote-command: '%s'", mPVCommand);
-				ServerCommand(mPVCommand);
-			}
-			KvGoBack(kv);
+		if (KvJumpToKey(kv, mapLookup))
+		{
+    		KvGetString(kv, COMMAND_KEY, map_command, sizeof(map_command), "");
+    		KvGetString(kv, POSTVOTE_COMMAND_KEY, mPVCommand, sizeof(mPVCommand), "");
+    		KvGetString(kv, PRE_COMMAND_KEY, map_precommand, sizeof(map_precommand), "");
+
+    		if (strlen(mPVCommand) > 0)
+    		{
+        		LogUMCMessage("SETUP: Executing map postvote-command: '%s'", mPVCommand);
+        		ServerCommand(mPVCommand);
+    		}
+    		KvGoBack(kv);
 		}
 		KvGoBack(kv);
 	}

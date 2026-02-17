@@ -3926,8 +3926,8 @@ public Action:Handle_TieredVoteTimer(Handle:timer, Handle:pack)
 	new Handle:options = CreateArray();
 
 	new UMC_BuildOptionsError:error = BuildMapVoteItems(
-		vM, options, stored_mapcycle,
-		tieredKV, stored_scramble, false,
+		vM, options, tieredKV,
+		stored_mapcycle, stored_scramble, false,
 		false, stored_ignoredupes,
 		stored_strictnoms, true, stored_exclude);
 
